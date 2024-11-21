@@ -1,1 +1,5 @@
-package day01
+package main
+
+func main() {
+	
+}
