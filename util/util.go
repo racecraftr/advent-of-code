@@ -1,30 +1,54 @@
 package util
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
-func check(err error) {
+func Check(err error) {
 	if err != nil {
 		panic(err)
 	}
 }
 
-func GetContent(year, day int) string {
-	path := fmt.Sprintf("y%d/day%02d/in.txt", year, day)
-	absPath, err := filepath.Abs(path)
-	check(err)
+func GetContentLocal() string {
+
+	absPath, err := filepath.Abs("in.txt")
+	Check(err)
 
 	bytes, err := os.ReadFile(absPath)
-	check(err)
+	Check(err)
 	content := string(bytes)
 	return content
 
 }
 
-func GetLines(year, day int) []string {
-	return strings.Split(GetContent(year, day), "\n")
+func GetLinesLocal() []string {
+	return strings.Split(GetContentLocal(), "\n")
+}
+
+// from https://gist.github.com/tanaikech/5cb41424ff8be0fdf19e78d375b6adb8
+func Transpose[T any](slice [][]T) [][]T {
+	xl := len(slice[0])
+	yl := len(slice)
+	result := make([][]T, xl)
+	for i := range result {
+		result[i] = make([]T, yl)
+	}
+	for i := 0; i < xl; i++ {
+		for j := 0; j < yl; j++ {
+			result[i][j] = slice[j][i]
+		}
+	}
+	return result
+}
+
+func Dirname() string {
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		panic("getting calling function")
+	}
+	return filepath.Dir(filename)
 }
