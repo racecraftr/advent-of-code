@@ -2,6 +2,7 @@ package main
 
 import (
 	"adventOfCode/util"
+	"adventOfCode/util/conv"
 	_ "embed"
 	"flag"
 	"fmt"
@@ -10,12 +11,28 @@ import (
 //go:embed in.txt
 var input string
 
-func part1(intput string) string {
-	panic("Unimplemented")
+func part1(input string) string {
+	sum := 0
+	for i := 0; i < len(input); i++ {
+		if c := input[i]; c == input[(i+1)%len(input)] {
+			sum += int(c - '0')
+		}
+	}
+	return conv.ToString(sum)
 }
 
 func part2(input string) string {
-	panic("Unimplemented")
+	sum, l := 0, len(input)
+	if l%2 != 0 {
+		panic("invalid length")
+	}
+	halfIdx := l / 2
+	for i := 0; i <= halfIdx; i++ {
+		if c := input[i]; c == input[(i+halfIdx)%l] {
+			sum += int(c-'0') * 2
+		}
+	}
+	return conv.ToString(sum)
 }
 
 func main() {
