@@ -1,33 +1,13 @@
 package util
 
 import (
-	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 )
 
-func Check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func GetContentLocal() string {
-
-	absPath, err := filepath.Abs("in.txt")
-	Check(err)
-
-	bytes, err := os.ReadFile(absPath)
-	Check(err)
-	content := string(bytes)
-	return content
-
-}
-
-func GetLinesLocal() []string {
-	return strings.Split(GetContentLocal(), "\n")
-}
+var WhiteSpaceRegex = regexp.MustCompile("\\s+")
 
 // from https://gist.github.com/tanaikech/5cb41424ff8be0fdf19e78d375b6adb8
 func Transpose[T any](slice [][]T) [][]T {
@@ -51,4 +31,18 @@ func Dirname() string {
 		panic("getting calling function")
 	}
 	return filepath.Dir(filename)
+}
+
+func Check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func Lines(input string) []string {
+	return strings.Split(input, "\n")
+}
+
+func SplitSpace(input string) []string {
+	return WhiteSpaceRegex.Split(input, -1)
 }

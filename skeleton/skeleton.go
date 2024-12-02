@@ -24,12 +24,13 @@ func Run(day, year int) {
 		log.Fatalf("year is before 2015: %d", year)
 	}
 
-	ts, err := template.ParseFS(fs, "tmpls/*.go")
+	ts, err := template.ParseFS(fs, "templates/*.go")
 	if err != nil {
 		log.Fatalf("parsing tmpls directory: %s", err)
 	}
 
-	mainFilename := filepath.Join(util.Dirname(), "../../", fmt.Sprintf("y%d/day%02d/solver.go", year, day))
+	mainFilename := filepath.Join(util.Dirname(), "../", fmt.Sprintf("y%d/day%02d/main.go", year, day))
+	inFilename := filepath.Join(util.Dirname(), "../", fmt.Sprintf("y%d/day%02d/in.txt", year, day))
 
 	err = os.MkdirAll(filepath.Dir(mainFilename), os.ModePerm)
 	if err != nil {
@@ -41,6 +42,10 @@ func Run(day, year int) {
 	mainFile, err := os.Create(mainFilename)
 	if err != nil {
 		log.Fatalf("creating main.go file: %v", err)
+	}
+	_, err = os.Create(inFilename)
+	if err != nil {
+		log.Fatalf("creating in.txt file: %v", err)
 	}
 
 	ts.ExecuteTemplate(mainFile, "main.go", nil)
