@@ -9,7 +9,7 @@ import (
 
 var WhiteSpaceRegex = regexp.MustCompile("\\s+")
 
-// from https://gist.github.com/tanaikech/5cb41424ff8be0fdf19e78d375b6adb8
+// Transpose from https://gist.github.com/tanaikech/5cb41424ff8be0fdf19e78d375b6adb8
 func Transpose[T any](slice [][]T) [][]T {
 	xl := len(slice[0])
 	yl := len(slice)
