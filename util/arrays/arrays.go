@@ -12,6 +12,36 @@ func Map[T, U any](arr []T, mapFunc func(T) U) []U {
 	return res
 }
 
+func Filter[T any](arr []T, filterFunc func(T) bool) []T {
+	res := make([]T, len(arr))
+	i := 0
+	for _, t := range arr {
+		if filterFunc(t) {
+			res[i] = t
+			i++
+		}
+	}
+	return res[:i]
+}
+
+func All[T any](arr []T, f func(T) bool) bool {
+	for _, t := range arr {
+		if !f(t) {
+			return false
+		}
+	}
+	return true
+}
+
+func Any[T any](arr []T, f func(T) bool) bool {
+	for _, t := range arr {
+		if f(t) {
+			return true
+		}
+	}
+	return false
+}
+
 func Sum[T int | uint | float64](arr []T) T {
 	var sum T = 0
 	for _, n := range arr {
