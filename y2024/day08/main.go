@@ -32,10 +32,6 @@ func parseInput(input string) ([][]rune, map[rune][]point) {
 		mtx[i] = []rune(ln)
 		for j, c := range ln {
 			if c != '.' {
-				if _, ok := antennaMap[c]; !ok {
-					antennaMap[c] = make([]point, 0)
-				}
-
 				antennaMap[c] = append(antennaMap[c], point{j, i})
 			}
 		}
@@ -92,7 +88,7 @@ func part2(input string) string {
 					ny -= yDiff
 				}
 
-				nx, ny = x2, y2
+				nx, ny = x1, y1
 				for grid.IsValidPos(mtx, nx, ny) {
 					set[point{nx, ny}] = true
 					nx += xDiff
