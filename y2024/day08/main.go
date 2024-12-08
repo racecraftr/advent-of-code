@@ -68,6 +68,20 @@ func part1(input string) string {
 	return conv.ToString(sum)
 }
 
+func gcd(a, b int) int {
+	if a < 0 {
+		a = -a
+	}
+	if b < 0 {
+		b = -b
+	}
+	if b == 0 {
+		return a
+	}
+
+	return gcd(b, a%b)
+}
+
 func part2(input string) string {
 	mtx, antennaMap := parseInput(input)
 
@@ -80,6 +94,10 @@ func part2(input string) string {
 				x2, y2 := arr[j].unwrap()
 				xDiff := x2 - x1
 				yDiff := y2 - y1
+
+				g := gcd(xDiff, yDiff)
+				xDiff /= g
+				yDiff /= g
 
 				nx, ny := x1, y1
 				for grid.IsValidPos(mtx, nx, ny) {
