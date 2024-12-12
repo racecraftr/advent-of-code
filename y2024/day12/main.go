@@ -10,19 +10,29 @@ import (
 	"fmt"
 )
 
-type point [2]int
+type point struct {
+	r, c int
+}
 
 type Set[T comparable] map[T]bool
 
 //go:embed in.txt
 var input string
 
-var dirs = [][2]int {
-	{1, 0},
-	{-1, 0},
-	{0, 1},
+var dirs = []point{
 	{0, -1},
+	{0, 1},
+	{-1, 0},
+	{1, 0},
 }
+
+var cornerToOrtho = map[point][]point{
+	{1, 1}:   {{1, 0}, {0, 1}},
+	{1, -1}:  {{1, 0}, {0, -1}},
+	{-1, 1}:  {{-1, 0}, {0, 1}},
+	{-1, -1}: {{-1, 0}, {0, -1}},
+}
+
 
 func parseInput(input string) [][]rune {
 	return arrays.Map(util.Lines(input), func(line string) []rune {
@@ -30,200 +40,96 @@ func parseInput(input string) [][]rune {
 	})
 }
 
-func part1(input string) string {
-	mtx := parseInput(input)
-	visited := make(Set[point])
+func explore(curr point, mtx [][]rune, visited Set[point], c rune, area, perimeter *int) {
 
-	sum := 0
-	for y, row := range mtx {
+	neightborCt := 0
 
-		for x, c := range row {
-
-			p := point{x, y}
-
-			if visited[p] {
-				continue
+	visited[curr] = true
+	for _, dir := range dirs {
+		next := point{curr.r + dir.r, curr.c + dir.c}
+		if grid.IsValidPos(mtx, next.c, next.r) && mtx[next.r][next.c] == c {
+			neightborCt ++
+			if !visited[next] {
+				(*area)++
+				explore(next, mtx, visited, c, area, perimeter)
 			}
-
-			visited[p] = true
-
-			perimSquares := map[point]int{}
-			areaSquares := make(Set[point])
-
-			queue := []point{p}
-
-			for len(queue) > 0 {
-				deQ := queue[0]
-				queue = queue[1:]
-
-				if areaSquares[deQ] {
-					continue
-				}
-
-				cx, cy := deQ[0], deQ[1]
-
-				for _, dir := range dirs {
-
-					dx, dy := dir[0], dir[1]
-					nx, ny := cx + dx, cy + dy
-
-					newPoint := point{nx, ny}
-
-					if grid.IsValidPos(mtx, nx, ny) && mtx[ny][nx] == c {
-
-						queue = append(queue, newPoint)
-						areaSquares[point{cx, cy}] = true
-						visited[newPoint] = true
-
-					} else {
-
-						if v, ok := perimSquares[newPoint]; ok {
-							perimSquares[newPoint] = v + 1
-						} else {
-							perimSquares[newPoint] = 1
-						}
-
-					}
-				}
-			}
-
-			perim := 0
-			area := max(len(areaSquares), 1)
-			for _, n := range perimSquares {
-				perim += n
-			}
-
-			sum += area * perim
-			fmt.Printf("Region of %c has area %d and perimeter %d\n", c, area, perim)
 		}
 	}
-
-	return conv.ToString(sum)
+	(*perimeter) += 4 - neightborCt
 }
 
-// this does not work. someone help me please lol
-func countSides(areaSquares Set[point], perimSquares map[point]int) int{
-	// we check the direct diagonal for each area square.
-	/*
-	if the diagonal is already inside areaSquares, don't count it.
-	if the diagonal is not in the perimeter squares, count it.
-	if the diagonal is inside the perimeter squares and the value is greater than one, count it.
 
-	it should be noted that the value (the amount of area squares surronding the perimeter square)
-	determines the number of corners.
+func exploreV2(curr point, mtx [][]rune, visited map[point]bool, currPlant rune, area, corners *int) {
+	visited[curr] = true
 
-	if it's 2: there is  1 corner  associated with it.
-	if it's 3: there are 2 corners associated with it.
-	if it's 4: there are 4 corners associated with it.
-	*/
-
-	diagDirs := [][2]int {
-		{1, 1},
-		{1, -1},
-		{-1, 1},
-		{-1, -1},
-	}
-
-	corners := map[point]int{}
-
-	for areaSquare := range areaSquares {
-		ax, ay := areaSquare[0], areaSquare[1]
-		for _, dir := range diagDirs {
-			cx, cy := ax + dir[0], ay + dir[1]
-			cpoint := point{cx, cy}
-
-			// skip over all squares in areasquare.
-			if areaSquares[cpoint] {
-				continue
-			}
-
-			if v, ok := perimSquares[cpoint]; !ok || (ok && v >= 2) {
-				numCorners := 1
-				switch v {
-				case 2: numCorners = 1
-				case 3: numCorners = 2 // for dips, there are two corners.
-				case 4: numCorners = 4 // for holes, there are four corners.
-				}
-				corners[cpoint] = numCorners
+	for _, dir := range dirs {
+		next := point{r: curr.r + dir.r, c: curr.c + dir.c}
+		if grid.IsValidPos(mtx, next.c, next.r) && mtx[next.r][next.c] == currPlant {
+			if !visited[next] {
+				(*area)++
+				exploreV2(next, mtx, visited, currPlant, area, corners)
 			}
 		}
 	}
 
-	sides := 0
-	for _, v := range corners {
-		sides += v
+	for corner, pair := range cornerToOrtho {
+		c := point{r: curr.r + corner.r, c: curr.c + corner.c}
+		i1 := point{r: curr.r + pair[0].r, c: curr.c + pair[0].c}
+		i2 := point{r: curr.r + pair[1].r, c: curr.c + pair[1].c}
+
+		if !match(i1, curr, mtx) && !match(i2, curr, mtx) {
+			(*corners)++
+		}
+		if match(i1, curr, mtx) && match(i2, curr, mtx) && !match(curr, c, mtx) {
+			(*corners)++
+		}
 	}
-	return sides
+}
+
+func match(i1, i2 point, mtx [][]rune) bool {
+
+	if grid.IsValidPos(mtx, i1.c, i1.r) && !grid.IsValidPos(mtx, i2.c, i2.r) {
+		return true
+	} else if grid.IsValidPos(mtx, i1.c, i1.r) && grid.IsValidPos(mtx, i2.c, i2.r) {
+		p1, p2 := mtx[i1.r][i1.c], mtx[i2.r][i2.c]
+		return p1 == p2
+	} else {
+		return false
+	}
+}
+
+func part1(input string) string {
+	cost := 0
+	mtx := parseInput(input)
+	visited := make(Set[point])
+	for y, row := range mtx{
+		for x, c := range row {
+			p := point{y, x}
+			if !visited[p] {
+				var area, perimeter int
+				explore(p, mtx, visited, c, &area, &perimeter)
+				cost += (area + 1) * perimeter
+			}
+		}
+	}
+	return conv.ToString(cost)
 }
 
 func part2(input string) string {
+	cost := 0
 	mtx := parseInput(input)
 	visited := make(Set[point])
-
-	sum := 0
-	for y, row := range mtx {
-
+	for y, row := range mtx{
 		for x, c := range row {
-
-			p := point{x, y}
-
-			if visited[p] {
-				continue
+			p := point{y, x}
+			if !visited[p] {
+				var area, perimeter int
+				exploreV2(p, mtx, visited, c, &area, &perimeter)
+				cost += (area + 1) * perimeter
 			}
-
-			visited[p] = true
-
-			perimSquares := map[point]int{}
-			areaSquares := make(Set[point])
-
-			queue := []point{p}
-
-			for len(queue) > 0 {
-				deQ := queue[0]
-				queue = queue[1:]
-
-				if areaSquares[deQ] {
-					continue
-				}
-
-				cx, cy := deQ[0], deQ[1]
-
-				for _, dir := range dirs {
-
-					dx, dy := dir[0], dir[1]
-					nx, ny := cx + dx, cy + dy
-
-					newPoint := point{nx, ny}
-
-					if grid.IsValidPos(mtx, nx, ny) && mtx[ny][nx] == c {
-
-						queue = append(queue, newPoint)
-						areaSquares[point{cx, cy}] = true
-						visited[newPoint] = true
-
-					} else {
-
-						if v, ok := perimSquares[newPoint]; ok {
-							perimSquares[newPoint] = v + 1
-						} else {
-							perimSquares[newPoint] = 1
-						}
-
-					}
-				}
-			}
-
-			areaSquares[p] = true
-
-			area := len(areaSquares)
-			sides := countSides(areaSquares, perimSquares)
-
-			sum += area * sides
-			fmt.Printf("Region of %c has area %d and %d sides\n", c, area, sides)
 		}
 	}
-
-	return conv.ToString(sum)
+	return conv.ToString(cost)
 }
 
 func main() {
