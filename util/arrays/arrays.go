@@ -60,3 +60,11 @@ func Product[T int | uint | float64](arr []T) T {
 	}
 	return product
 }
+
+func Fill[T any](val T, l int) []T {
+	res := make([]T, l)
+	for i := range l {
+		res[i] = val
+	}
+	return res
+}
