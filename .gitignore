@@ -2,3 +2,16 @@
 ./adventOfCode
 ./main
 ./adventOfCode.iml
+
+# working on adding rust files
+
+Cargo.toml
+Cargo.lock
+*.rs
+
+# Added by cargo
+
+/target
+
+*.png
+*.jpg
