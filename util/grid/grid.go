@@ -30,3 +30,17 @@ func Flatten[T any](grid [][]T) []T {
 	}
 	return flattened
 }
+
+// Point stores itself as [x, y].
+type Point [2]int
+
+func (p Point) Add(other Point) Point {
+	return Point{p[0] + other[0], p[1] + other[1]}
+}
+
+func At[T any](grid [][]T, p Point) (bool, T) {
+	if IsValidPos(grid, p[0], p[1]) {
+		return true, grid[p[0]][p[1]]
+	}
+	return false, grid[0][0]
+}
