@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-// point stores it as x, y.
-
 type Set[T comparable] map[T]bool
 
 type weightedPoint struct {
