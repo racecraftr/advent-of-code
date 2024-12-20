@@ -34,3 +34,11 @@ func Entries[K comparable, V any](mp map[K]V) []*Entry[K, V] {
 	}
 	return arr
 }
+
+func Copy[K comparable, V any](mp map[K]V) map[K]V {
+	res := make(map[K]V)
+	for k, v := range mp {
+		res[k] = v
+	}
+	return res
+}
